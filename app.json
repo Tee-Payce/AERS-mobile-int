@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "mobile-int",
-    "slug": "mobile-int",
+    "name": "AERS-mobile",
+    "slug": "AERS-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "mobile-int",
+    "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -15,7 +15,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.dcnolie.aers"
     },
     "web": {
       "bundler": "metro",
@@ -24,13 +25,21 @@
     },
     "plugins": [
       "expo-router",
+
       [
         "expo-splash-screen",
+
         {
           "image": "./assets/splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(AERS-mobile) to use your location."
         }
       ]
     ],

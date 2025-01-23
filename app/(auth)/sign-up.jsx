@@ -1,53 +1,130 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { FontAwesome } from '@expo/vector-icons'
-import FormField from '../../components/FormField'
-import { useState } from "react";
-import CustomButton from '../../components/CustomButton'
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { FontAwesome } from '@expo/vector-icons';
+import FormField from '../../components/FormField';
+import CustomButton from '../../components/CustomButton';
+import { Link, router } from 'expo-router';
+import { createUser } from '../../lib/appwrite';
+
 const SignUp = () => {
-  const [form, setform] = useState({
-    email:'',
-    password:''
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [form, setForm] = useState({
+    
+    username: '',
+    fullName: '',
+    email: '',
+    password: ''
+  });
+  const [retypePassword, setRetypePassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const submit = ()=>{
+  const submit = async () => {
+    if (!form.username || !form.fullName || !form.email || !form.password) {
+      Alert.alert('Error', 'Please fill in all the fields!');
+      return;
+    }
+  
+    if (form.password !== retypePassword) {
+      Alert.alert('Error', 'Passwords do not match!');
+      return;
+    }
+  
+    setIsSubmitting(true);
+  
+    try {
+      await createUser(form.username, form.fullName, form.email, form.password);
+      router.push('/find');
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Something went wrong.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
 
-  }
   return (
-    <SafeAreaView className="bg-primary h-full" >
-    <ScrollView contentContainerStyle={{height: '100%'}}>
-    <View className="w-full text-white justify-center items-center min-h-[85vh] px-1 my-6">
-    <Text className="text-2xl text-white text-semibold mt-10 font-psemibold">
-      Sign Up <FontAwesome size={28} name="sign-in" color='#323255' />
-    </Text>
-    <FormField
-      title="Email"
-      value={form.email}
-      handleChangeText={(e) => setform({...form, email:e})}
-      otherStyles="mt-7 w-full"
-      keyboardType="email-address"
-    />
-     <FormField
-      title="Password"
-      value={form.password}
-      handleChangeText={(e) => setform({...form, password:e})}
-      otherStyles="mt-7 w-full"
-     
-    />
-    <CustomButton 
-      title="sign up"
-      handlePress={submit}
-      containerStyles="mt-7 w-full"
-      isLoading={isSubmitting}
-    />
-    </View>
-    </ScrollView>
-    </SafeAreaView> 
-  )
-}
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>
+            Sign Up <FontAwesome size={28} name="sign-in" color="#FF9001" />
+          </Text>
 
-export default SignUp
+          <FormField
+                      title="Username"
+                      value={form.username}
+                      handleChangeText={(e) => setForm({ ...form, username: e })}
+                      otherStyles={styles.inputField} placeholder={undefined}          />
+          <FormField
+                      title="Full Name"
+                      value={form.fullName}
+                      handleChangeText={(e) => setForm({ ...form, fullName: e })}
+                      otherStyles={styles.inputField} placeholder={undefined}          />
+          <FormField
+                      title="Email"
+                      value={form.email}
+                      handleChangeText={(e) => setForm({ ...form, email: e })}
+                      otherStyles={styles.inputField}
+                      keyboardType="email-address" placeholder={undefined}          />
+          <FormField
+                      title="Password"
+                      value={form.password}
+                      handleChangeText={(e) => setForm({ ...form, password: e })}
+                      otherStyles={styles.inputField}
+                      secureTextEntry placeholder={undefined}          />
+          <FormField
+                      title="Retype Password"
+                      value={retypePassword}
+                      handleChangeText={(e) => setRetypePassword(e)}
+                      otherStyles={styles.inputField}
+                      secureTextEntry placeholder={undefined}          />
+          <CustomButton
+                      title="Sign Up"
+                      handlePress={submit}
+                      containerStyles={styles.button}
+                      isLoading={isSubmitting} textStyles={undefined}          />
+          <Link href="/sign-in" style={styles.link}>
+            Already have an account? Sign In
+          </Link>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
 
-const styles = StyleSheet.create({})
+export default SignUp;
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#161622',
+    flex: 1,
+  },
+  contentContainer: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '-50%',
+    paddingHorizontal: 16,
+    marginTop: 15,
+  },
+  title: {
+    fontSize: 24,
+    color: 'white',
+    fontFamily: 'Poppins-SemiBold',
+    marginTop: 20,
+  },
+  inputField: {
+    marginTop: 28,
+    width: '100%',
+  },
+  button: {
+    marginTop: 28,
+    width: '100%',
+  },
+  link: {
+    fontSize: 18,
+    color: '#FF9001',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+});

@@ -1,23 +1,6 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import React from 'react';
 import { Tabs } from 'expo-router';
-import { View, Text, Image } from "react-native";
-import {icons} from '../../constants'
-
-const TabIcon = ({ icon, color, name, focused}) => {
-    return(
-        <View className="items-center justify-center gap-2">
-            <Image
-                source={icon}
-                resizeMode='contain'
-                tintColor={color}
-                className="w-6 h-6"
-            />
-            <Text className={`${focused ? 'font-psemibold': 'font-pregular'} text-xs`}>
-                {name}
-            </Text>
-        </View>
-    )
-}
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 const TabLayout = () => {
   return (
@@ -25,52 +8,47 @@ const TabLayout = () => {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#161622", // Modern dark background color
-          
+          backgroundColor: '#161622',
           borderTopWidth: 1,
           borderTopColor: '#232533',
-          height:84,
-
+          height: 84,
         },
-        tabBarActiveTintColor: "#ff8c00", // Rich orange for active icons
-        tabBarInactiveTintColor: "#ffffff", // White for inactive icons
+        tabBarActiveTintColor: '#ff8c00',
+        tabBarInactiveTintColor: '#666333',
         tabBarLabelStyle: {
-          fontSize: 12, // Adjust font size
+          fontSize: 12,
         },
       }}
     >
-    
-        <Tabs.Screen
+      <Tabs.Screen
         name="report"
         options={{
           title: 'Report',
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="ambulance" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome size={28} name="ambulance" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="home"
+        name="find"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
-        }}
-      />
-      
-      <Tabs.Screen
-        name="create"
-        options={{
-          title: 'Create',
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="wrench" color={color} />,
+          title: 'Find',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome size={28} name="map-marker" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="settings"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="user-circle" color={color} />,
+          title: 'Settings',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome size={28} name="sliders" color={color} />
+          ),
         }}
       />
     </Tabs>
   );
-}
+};
 
-export default TabLayout
+export default TabLayout;

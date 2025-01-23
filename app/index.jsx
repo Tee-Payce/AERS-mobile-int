@@ -1,33 +1,74 @@
-import {  Text, View } from 'react-native'
-import React from 'react'
-import { StatusBar } from 'expo-status-bar'
-import { Link, Redirect, router } from 'expo-router'
-import "../global.css";
+import CustomButton from "@/components/CustomButton";
+import { useGlobalContext } from "@/context/GlobalProvider";
+import { Link, Redirect, router } from "expo-router";
+import React from "react";
+import { Text, View, StyleSheet } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView } from 'react-native-web';
-import CustomButton from '../components/CustomButton';
+import 'react-native-polyfill-globals/auto';
+
+
 
 const App = () => {
-  return (
-    <SafeAreaView className="bg-primary h-full" >
-    <ScrollView contentContainerStyle={{height: '100%'}}>
-    <View className="w-full justify-center items-center min-h-[85vh] px-4">
-      <Text className='text-3xl text-center text-red-500 font-pextrabold'>AERS
-    </Text>
-    <StatusBar style='auto'/> 
-    <CustomButton
-      title="continue to App"
-      handlePress={() => router.push('/sign-up')}
-      containerStyles="bg-secondary rounded-xl min-h-[62px] justify-center items-center w-full mt-7"
-      textStyles="text-white font-psemibold text-lg"
-    />
-    <Link href="/home" options={{ headerShown: false }} style={{color: 'blue'}}>Go to home</Link>
-    </View>
-    </ScrollView>
-    <StatusBar backgroundColor='#161622' style='light'/>
-    </SafeAreaView>
-  )
-}
+  const {isLoading, isLoggedIn } = useGlobalContext();
 
+  if(!isLoading && isLoggedIn) return <Redirect href='/find'/>
+
+  return (
+    <SafeAreaView style={styles.container}>
+     
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>AERS
+     
+    </Text>
+    <CustomButton
+          title="continue to App"
+          handlePress={() => router.push('/sign-up')}
+          containerStyles={styles.customButtonContainer}
+          textStyles={styles.customButtonText} isLoading={undefined}          />
+          <Link href="/find" style={styles.link}>
+            Jump to locate
+          </Link>
+    </View>
+    </SafeAreaView>
+  );
+}
 export default App
 
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#161622',
+    flex: 1,
+  },
+ 
+  contentContainer: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '80%',
+    paddingHorizontal: 16,
+  },
+  title: {
+    fontSize: 36,
+    textAlign: 'center',
+    color: 'red',
+    fontFamily: 'Poppins-ExtraBold',
+  },
+  customButtonContainer: {
+    backgroundColor: '#FF9001',
+    borderRadius: 12,
+    minHeight: 62,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 28,
+  },
+  customButtonText: {
+    color: 'white',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 18,
+  },
+  link: {
+    color: 'blue',
+    marginTop: 12,
+  },
+});
