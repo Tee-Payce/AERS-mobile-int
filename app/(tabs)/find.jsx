@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, FlatList, Alert } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Alert, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { Client, Databases, Query } from 'react-native-appwrite';
 import { config } from '../../lib/appwrite';
 import CustomButton from '../../components/CustomButton';
 import { FontAwesome } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { useGlobalContext } from '../../context/GlobalProvider';
 
 // Initialize the Appwrite Client
@@ -165,12 +165,12 @@ const Find = () => {
           <CustomButton
             containerStyles={styles.button}
             title="Police"
-            handlePress={() => fetchResponders('police')}
+            handlePress={() => fetchResponders('fire')}
           />
           <CustomButton
             containerStyles={styles.button}
             title="Fire"
-            handlePress={() => fetchResponders('fire')}
+            handlePress={() => fetchResponders('police')}
           />
           <CustomButton
             containerStyles={styles.button}
@@ -222,6 +222,9 @@ const Find = () => {
         renderItem={renderResponder}
         keyExtractor={(item) => item.$id}
       />
+      {/* <TouchableOpacity onPress={()=>{router.push('/sign-in')}}>
+       <Text> Go back to login </Text>
+      </TouchableOpacity> */}
     </View>
   );
 };

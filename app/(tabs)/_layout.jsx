@@ -27,6 +27,7 @@ const TabLayout = () => {
           tabBarIcon: ({ color }) => (
             <FontAwesome size={28} name="ambulance" color={color} />
           ),
+          
         }}
       />
       <Tabs.Screen

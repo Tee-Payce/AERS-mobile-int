@@ -22,7 +22,7 @@ const App = () => {
     </Text>
     <CustomButton
           title="continue to App"
-          handlePress={() => router.push('/sign-up')}
+          handlePress={() => router.push('/sign-in')}
           containerStyles={styles.customButtonContainer}
           textStyles={styles.customButtonText} isLoading={undefined}          />
           <Link href="/find" style={styles.link}>
