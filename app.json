@@ -9,14 +9,25 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app requires access to the camera.",
+        "NSMicrophoneUsageDescription": "This app requires access to the microphone.",
+        "NSPhotoLibraryUsageDescription": "This app requires access to your photo library."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.dcnolie.aers"
+      "package": "com.dcnolie.aers",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -25,10 +36,8 @@
     },
     "plugins": [
       "expo-router",
-
       [
         "expo-splash-screen",
-
         {
           "image": "./assets/splash.png",
           "imageWidth": 200,
@@ -41,7 +50,31 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow $(AERS-mobile) to use your location."
         }
-      ]
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(AERS-mobile) to access your camera",
+          "microphonePermission": "Allow $(AERS-mobile) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(AERS-mobile) to access your photos.",
+          "savePhotosPermission": "Allow $(AERS-mobile) to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
+        }
+      ],
+      "react-native-vision-camera"
     ],
     "experiments": {
       "typedRoutes": true

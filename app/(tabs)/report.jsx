@@ -1,152 +1,193 @@
-import { CameraView,Camera } from 'expo-camera';
-import { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useSearchParams } from 'expo-router/build/hooks';
+import { StyleSheet, Text, View,Button, SafeAreaView, TouchableOpacity, Alert } from 'react-native'
+import { useEffect, useState, useRef } from 'react';
+import { Camera, CameraView, CameraType } from 'expo-camera';
+import { Video } from 'expo-av';
+import * as MediaLibrary  from 'expo-media-library'
+import {shareAsync} from 'expo-sharing'
+import { FontAwesome } from '@expo/vector-icons';
 import { uploadVideo } from '@/lib/appwrite';
-// Define Camera Types Manually
-const CameraType = {
-  back: 'back',
-  front: 'front',
-};
+import { useRouter, useSearchParams } from 'expo-router/build/hooks';
+import { useGlobalContext } from '@/context/GlobalProvider';
+import VideoShare from '@/components/VideoShare'
+import UploadVideo from '@/components/UploadVideo'
 
-const Report= () => {
-  const [facing, setFacing] = useState(CameraType.front); // Use custom CameraType
-  const [isRecording, setIsRecording] = useState(false);
-  const [cameraPermission, setCameraPermission] = useState(null); // State for camera permission
-  const [audioPermission, setAudioPermission] = useState(null); 
+const Report = () => {
+  const { user } = useGlobalContext();
+
+  const router = useRouter();
   const params = useSearchParams();
-  const urlUserId = params.get('userId');
-  const [cameraReady, setCameraReady] = useState(false)
-  const cameraRef = useRef(null);
-  const [timeLeft, setTimeLeft] = useState(60); // Initial countdown time
-  const [intervalId, setIntervalId] = useState(null); // To store the interval ID
+  const userId = params.get('userId');
+  const responderId = '678a1a180014f1a82c72';
+  
+
+  let cameraRef = useRef();
+  const [facing, setFacing] = useState({CameraType:'back'});
+  const [videoUris, setVideoUris] = useState({ back: null, front: null });
+  const [hasCameraPermission, setHasCameraPermission] = useState();
+  const [hasMicrophonePermission, setHasMicrophonePermission] = useState();
+  const [hasMediaLibraryPermission, setHasMediaLibraryPermission] = useState();
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [video, setVideo] = useState();
+  const [ cameraReady, setCameraReady] = useState();
 
   useEffect(() => {
     const requestPermissions = async () => {
-      const cameraStatus = await Camera.requestCameraPermissionsAsync();
-      const audioStatus = await Camera.requestMicrophonePermissionsAsync(); // Correct audio permission request
-      setCameraPermission(cameraStatus.status); // Set camera permission status
-      setAudioPermission(audioStatus.status); // Set audio permission status
+      const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
+      const { status: audioStatus } = await Camera.requestMicrophonePermissionsAsync();
+      const { status: mediaStatus } = await MediaLibrary.requestPermissionsAsync();
+      
+      
+      setHasCameraPermission(cameraStatus === 'granted');
+      setHasMicrophonePermission(audioStatus === 'granted');
+      setHasMediaLibraryPermission(mediaStatus === 'granted');
     };
 
     requestPermissions();
   }, []);
 
   useEffect(() => {
-    if (cameraPermission === 'granted' && audioPermission === 'granted') {
+    if (hasCameraPermission && hasMicrophonePermission && hasMediaLibraryPermission) {
       setCameraReady(true);
     }
-  }, [cameraPermission, audioPermission]);
-  useEffect(() => {
-    // Clear the interval if the component is unmounted or the timer is stopped
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
+  }, [hasCameraPermission, hasMicrophonePermission, hasMediaLibraryPermission]);
+
+  if (hasCameraPermission === null || hasMicrophonePermission === null || hasMediaLibraryPermission === null) {
+    return <Text>Requesting Permissions...</Text>;
+  } else if (!hasCameraPermission || !hasMicrophonePermission || !hasMediaLibraryPermission) {
+    return <Text>Permission denied .</Text>;
+  }
+
+  let recordVideo = async () => {
+    setIsRecording(true);
+    let options = {
+      quality: '1080p',
+      maxDuration: 20,
+      mute: false,
     };
-  }, [intervalId]);
-
-  if (cameraPermission === null || audioPermission === null) {
-    return <View />;
-  }
-
-  if (cameraPermission !== 'granted' || audioPermission !== 'granted') {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to access the camera and microphone</Text>
-        <TouchableOpacity style={styles.permissionButton} onPress={() => requestPermissions()}>
-          <Text style={styles.permissionButtonText}>Grant Permission</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
   
-  const toggleCameraFacing = () => {
-    setFacing((current) => (current === CameraType.back ? CameraType.front : CameraType.back));
+    try {
+      const recordedVideo = await cameraRef.current.recordAsync(options);
+  
+      if (!recordedVideo || !recordedVideo.uri) {
+        console.error('🚨 Error: Video URI is null or undefined.');
+        Alert.alert('Error', 'Failed to record video. Please try again.');
+        return;
+      }
+  
+      console.log('📸 Recorded video:', recordedVideo);
+      console.log('📂 Video URI:', recordedVideo.uri);
+  
+      setVideo(recordedVideo);
+  
+      // Ensure the user is logged in
+      if (!user) {
+        Alert.alert('Error', 'User not logged in. Please log in to continue.');
+        return;
+      }
+  
+      console.log('🚀 Recorded video successfully:', recordedVideo.uri);
+      // await uploadVideo(recordedVideo.uri, user.$id, responderId);
+     //  Alert.alert('Success', 'Video uploaded successfully!');
+    } catch (error) {
+      console.error('❌ Recording failed!', error);
+      Alert.alert('Error', 'An error occurred while recording video.');
+    } finally {
+      setIsRecording(false);
+    }
+  };
+  
+
+  let stopRecording = () => {
+    setIsRecording(false);
+    cameraRef.current.stopRecording();
   };
 
-  function handleRecordPress() {
-    if (isRecording) {
-      const id = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(id);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      setIntervalId(id);
-      Alert.alert('Stop Recording', 'Stopping the recording...');
-      setIsRecording(false);
-      
-    } else {
-      Alert.alert('Recording Started', 'Recording for 1 minute...');
-      setIsRecording(true);
-      setTimeout(() => {
-        setIsRecording(false);
-        Alert.alert('Recording Stopped', '1-minute recording complete.');
-      }, 60000); // Automatically stop after 1 minute
-    }
-  }
+  if(video){
+    let shareVideo = async () => {
+      shareAsync(video.uri).then(()=>{
+      setVideo(undefined);
+    });
+  };
+  let saveVideo = ()=>{
+    MediaLibrary.saveToLibraryAsync(video.uri).then(()=>{
+      setVideo(undefined);
+    });
+  };
+ 
   
-  
-
-
-
-  return (
-    <View style={styles.container}>
-      <CameraView
-        ref={cameraRef}
-        style={styles.camera}
-        type={facing}
-        onCameraReady={() => setCameraReady(true)}
+  return(
+    <SafeAreaView style={styles.container}>
+      <Video
+      style={styles.video}
+      source={{ uri : video.uri}}
+      useNativeControls
+      resizeMode='contain'
+      isLooping
       />
-       {isRecording && (
-        <Text style={styles.timer}>
-          {timeLeft}s
-        </Text>
-      )}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+      {/* <Button style={styles.button1} title='Share' onPress={shareVideo}/> 
+      <VideoShare videoUri={video.uri} />*/}
+      <UploadVideo videoUri={video.uri} userId={user.$id} responderId={responderId}/>
+      {hasMediaLibraryPermission ? <Button style={styles.button1} title='Save' onPress={saveVideo}/> : undefined}
+      <Button style={styles.button1} title='Discard' onPress={() => setVideo(undefined)}/>
+</View>
+    </SafeAreaView>
+    );
+  }
+
+
+
+  function toggleCameraFacing() {
+    setFacing(current => (current === 'back' ? 'front' : 'back'));
+  }
+  return (
+    <SafeAreaView style={styles.bigContainer}>
+    <CameraView style={styles.container} ref={cameraRef} mode="video" facing={facing}/>
+    
+
+    
+    <View style={styles.buttonContainer}>
+    <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
           <FontAwesome name="refresh" size={24} color="#ff8c00" />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.recordButton}
-          onPress={handleRecordPress}
-          disabled={!cameraReady} // Disable button until the camera is ready
-        >
+        <TouchableOpacity style={styles.recordButton} onPress={isRecording ? stopRecording : recordVideo}>
           <Text style={styles.text}>
             <FontAwesome name={isRecording ? 'stop-circle-o' : 'circle-o'} size={60} color="#ff0000" />
           </Text>
         </TouchableOpacity>
-      </View>
-    </View>
-  );
-};
+            </View>
+           
+    </SafeAreaView>
+  )
+}
 
 export default Report;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  bigContainer:{
+    flex:1
+  },
+  container:{
+    flex:1,
+    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
+    flexDirection: 'column',
+    backgroundColor: '#161630'
   },
-  message: {
-    textAlign: 'center',
-    paddingBottom: 10,
-    color: 'white',
-  },
-  camera: {
-    flex: 1,
+  
+  video:{
+    flex:1,
+    alignSelf:'stretch'
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
     padding: 17,
-    backgroundColor: '#161632',
+    backgroundColor: '#161630'
+  },
+  button1:{
+    marginLeft: 5
   },
   timer: {
     color: 'white',
@@ -167,20 +208,6 @@ const styles = StyleSheet.create({
     padding: 1,
     borderRadius: 100,
     justifyContent: 'center',
-    alignItems: 'center'
-  },
-  text: {
-    fontSize: 18,
-    color: 'white',
-  },
-  permissionButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-  },
-  permissionButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    alignItems: 'center',
   },
 });

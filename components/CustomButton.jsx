@@ -25,7 +25,7 @@ export default CustomButton
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#FF6F61',
+    backgroundColor: '#ff8c00',
     borderRadius: 10,
     minHeight: 62,
     justifyContent: 'center',

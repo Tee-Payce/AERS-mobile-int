@@ -1,7 +1,7 @@
-
+import * as Permissions from 'expo-permissions';
 import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router/build/hooks'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Client, Databases, Query, Realtime, ID } from 'react-native-appwrite';
 import { client ,databases, config, sendMessage } from '../../lib/appwrite';
@@ -9,6 +9,8 @@ import { View, Text, FlatList, TextInput, Button, ScrollView, StyleSheet, Alert 
 import FormField from '../../components/FormField';
 import { FontAwesome } from '@expo/vector-icons';
 import CustomButton from '../../components/CustomButton';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { useEvent } from 'expo';
 
 
 // const client = new Client();
@@ -19,24 +21,52 @@ const Chat = () => {
   const params = useSearchParams();
   const chatId = params.get('chatId'); // Use `get` to retrieve query parameters
   const urlUserId = params.get('userId');
+  const videoUri = params.get('videoUri');
+  console.log('videoUri', videoUri)
   const urlResponderId = params.get('responderId');
   const isSender = false;
   const [form, setForm] = useState({
    messageBody:''
   });
+  const videoSource = videoUri;
+  console.log('video source', videoSource)
+  const player = useVideoPlayer(videoSource, player => {
+    player.loop = true;
+    player.play();
+  });
 
-  console.log('chat', chatId)
-  console.log('user', urlUserId)
-  console.log('responder',urlResponderId)
+  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+
+ 
 
   const [messages, setMessages] = useState([]);
   const [messageBody, setMessageBody] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState('');
   const [responderName, setResponderName] = useState('');
+  const scrollViewRef = useRef();
+
+//video permissions
+ useEffect(() => {
+  const checkFileAccess = async () => {
+    const { status } = await Permissions.askAsync(Permissions.MEDIA_LIBRARY);
+    if (status !== 'granted') {
+      console.error('Permission to access media library is required!');
+    } else {
+      const fileInfo = await FileSystem.getInfoAsync(videoUri);
+      console.log('📂 File info:', fileInfo);
+    }
+  };
+
+  checkFileAccess();
+}, [videoUri]);
+useEffect(() => {
+  scrollViewRef.current?.scrollToEnd({ animated: true });
+}, [messages]);
 
   useEffect(() => {
     fetchMessages(); // Initial fetch
+    fetchResponderName();
 
     // Polling every 5 seconds
     const interval = setInterval(fetchMessages, 5000);
@@ -57,6 +87,7 @@ const Chat = () => {
         ]
       );
       setMessages(response.documents);
+      
     } catch (error) {
       console.error('Failed to fetch messages:', error);
       setNotification('Failed to fetch messages. Please try again.');
@@ -124,17 +155,19 @@ const Chat = () => {
         </View>
       ) : null}
       <View style={styles.innerContainer}>
-        <ScrollView contentContainerStyle={styles.scrollView}>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollView}>
           <View style={styles.messagesContainer}>
-            {messages.map((msg, index) => {
-            const isSenderStyle = msg.isResponderSender === isSender;
-            return (
-              <View key={index} style={[styles.messageContainer, isSenderStyle ? styles.senderMessage : styles.responderMessage]}>
+           
+          {messages.map((msg, index) => {
+            const isSenderStyle = msg.isResponderSender === isSender;// Adjust this logic as needed
+  return (
+    <View key={index} style={[styles.messageContainer, isSenderStyle ? styles.senderMessage : styles.responderMessage]}>
                 <Text style={styles.messageText}>{msg.messageBody}</Text>
                 <Text style={styles.timestamp}>{new Date(msg.created).toLocaleTimeString()}</Text>
               </View>
             );
           })}
+
           </View>
         </ScrollView>
         <View style={styles.inputContainer}>
@@ -192,12 +225,14 @@ const styles = StyleSheet.create({
       alignSelf: 'flex-end',
       backgroundColor: '#ff8c00',
       borderRadius: 5,
+      padding: 3,
       marginRight: 10,
     },
     responderMessage: {
       alignSelf: 'flex-start',
       backgroundColor: '#1e90ff',
       borderRadius:5,
+      padding: 3,
       marginLeft: 10,
     },
     messageText: {
@@ -243,6 +278,16 @@ const styles = StyleSheet.create({
     color:'#ff8c00',
     marginLeft:70,
     marginBottom:5,
-  }
+  },
+  video:
+  { width: 200, 
+    height: 200,
+    alignSelf: 'flex-end',
+      backgroundColor: '#ff8c00',
+      borderRadius: 5,
+      padding: 3,
+      marginRight: 10,
+
+   }
 
 });

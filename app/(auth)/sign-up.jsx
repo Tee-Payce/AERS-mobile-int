@@ -120,6 +120,7 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 28,
     width: '100%',
+    color: '#ff8c00'
   },
   link: {
     fontSize: 18,

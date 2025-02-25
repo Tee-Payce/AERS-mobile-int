@@ -1,8 +1,11 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { StatusBar } from 'expo-status-bar';
+import { useGlobalContext } from '@/context/GlobalProvider';
 
 const TabLayout = () => {
+  const {user} = useGlobalContext();
   return (
     <Tabs
       screenOptions={{
@@ -22,6 +25,7 @@ const TabLayout = () => {
     >
       <Tabs.Screen
         name="report"
+        initialParams={{userId : user.$id}}
         options={{
           title: 'Report',
           tabBarIcon: ({ color }) => (
@@ -48,6 +52,7 @@ const TabLayout = () => {
           ),
         }}
       />
+
     </Tabs>
   );
 };

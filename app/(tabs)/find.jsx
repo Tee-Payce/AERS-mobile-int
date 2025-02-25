@@ -9,6 +9,8 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { useGlobalContext } from '../../context/GlobalProvider';
 
+//api key AIzaSyAto3LQyz0EUXw2PC2yENPhrV4lblIjc38
+
 // Initialize the Appwrite Client
 const client = new Client();
 client.setEndpoint(config.endpoint).setProject(config.projectId);
